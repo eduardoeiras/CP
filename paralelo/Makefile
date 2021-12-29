@@ -1,15 +1,15 @@
 # source files.
-SRC = bucket_sort_seq.c
+SRC = bucket_sort_par.c
 
 OBJ = $(SRC:.cpp=.o)
 
-OUT = bsseq
+OUT = bspar
 
 # include directories
 INCLUDES = -I.
 
 # C compiler flags
-CCFLAGS = -O0 -Wall -I/share/apps/papi/5.4.1/include -g -fno-omit-frame-pointer
+CCFLAGS = -std=c99 -O2 -fopenmp -lm -Wall -I/share/apps/papi/5.4.1/include
 
 # compiler
 CCC = gcc
