@@ -3,10 +3,10 @@
 
 #include "papi.h"
 
-#define NARRAY 126   // Array size
+#define NARRAY 256   // Array size
 #define NBUCKET 32  // Number of buckets
 #define INTERVAL 16  // Each bucket capacity
-#define SIZE 64  // Each bucket size
+#define SIZE 16  // Each bucket size
 
 // PAPI events to monitor
 #define NUM_EVENTS 4
@@ -16,10 +16,11 @@ long long values[NUM_EVENTS], min_values[NUM_EVENTS];
 int retval, EventSet=PAPI_NULL;
 
 // number of times the function is executed and measured
-#define NUM_RUNS 5
+#define NUM_RUNS 1
 
 void BucketSort(int arr[]);
-void quick_sort(int *a, int left, int right);
+void quick_sort(int *a, int p, int r);
+int partition(int *a, int p, int r);
 void print(int arr[]);
 void printBuckets(int Bucket[], int nelm);
 int getBucketIndex(int value);
@@ -75,35 +76,46 @@ void BucketSort(int arr[]) {
   return;
 }
 
+int partition(int *a, int p, int r)
+{
+    int lt[r-p];
+    int gt[r-p];
+    int i;
+    int j;
+    int key = a[r];
+    int lt_n = 0;
+    int gt_n = 0;
+
+    for(i = p; i < r; i++){
+        if(a[i] < a[r]){
+            lt[lt_n++] = a[i];
+        }else{
+            gt[gt_n++] = a[i];
+        }
+    }
+
+    for(i = 0; i < lt_n; i++){
+        a[p + i] = lt[i];
+    }
+
+    a[p + lt_n] = key;
+
+    for(j = 0; j < gt_n; j++){
+        a[p + lt_n + j + 1] = gt[j];
+    }
+
+    return p + lt_n;
+}
+
 // Function to sort the elements of each bucket
-void quick_sort(int *a, int left, int right) {
-    int i, j, x, y;
+void quick_sort(int *a, int p, int r)
+{
+    int div;
 
-    i = left;
-    j = right;
-    x = a[(left + right) / 2];
-
-    while(i <= j) {
-        while(a[i] < x && i < right) {
-            i++;
-        }
-        while(a[j] > x && j > left) {
-            j--;
-        }
-        if(i <= j) {
-            y = a[i];
-            a[i] = a[j];
-            a[j] = y;
-            i++;
-            j--;
-        }
-    }
-
-    if(j > left) {
-        quick_sort(a, left, j);
-    }
-    if(i < right) {
-        quick_sort(a, i, right);
+    if(p < r){
+        div = partition(a, p, r);
+        quick_sort(a, p, div - 1);
+        quick_sort(a, div + 1, r);
     }
 }
 
