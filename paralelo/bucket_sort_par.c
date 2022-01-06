@@ -4,12 +4,12 @@
 
 #include "papi.h"
 
-#define NARRAY 256   // Array size
-#define NBUCKET 32  // Number of buckets
-#define INTERVAL 16  // Each bucket capacity
-#define SIZE 16  // Each bucket size
+#define NARRAY 2048   // Array size
+#define NBUCKET 64  // Number of buckets
+#define INTERVAL 64  // Each bucket capacity
+#define SIZE 64  // Each bucket size
 
-#define TASK_SIZE 100 // Numero de tasks paralelas
+#define NUM_THREADS 12
 
 // PAPI events to monitor
 #define NUM_EVENTS 4
@@ -19,7 +19,7 @@ long long values[NUM_EVENTS], min_values[NUM_EVENTS];
 int retval, EventSet=PAPI_NULL;
 
 // number of times the function is executed and measured
-#define NUM_RUNS 1
+#define NUM_RUNS 5
 
 void BucketSort(int arr[]);
 void quick_sort(int *a, int p, int r);
@@ -37,11 +37,13 @@ void BucketSort(int arr[]) {
   int bucketelm [NBUCKET];
 
   // Initialize empty buckets
+  #pragma omp parallel for
   for (i = 0; i < NBUCKET; ++i) {
     bucketelm[i] = 0;
   }
 
   // Fill the buckets with respective elements
+  #pragma omp parallel for
   for (i = 0; i < NARRAY; ++i) {
     int pos = getBucketIndex(arr[i]);
     buckets[pos][bucketelm[pos]++] = arr[i];
@@ -72,7 +74,7 @@ void BucketSort(int arr[]) {
   }*/
 
   // Put sorted elements on arr
-    for (j = 0, i = 0; i < NBUCKET; ++i) {
+     for (j = 0, i = 0; i < NBUCKET; ++i) {
         int nelm = bucketelm[i];
         int k = 0;
         for (k = 0; k < nelm ; k++) {
@@ -93,6 +95,7 @@ int partition(int *a, int p, int r)
     int lt_n = 0;
     int gt_n = 0;
 
+  #pragma omp parallel for
     for(i = p; i < r; i++){
         if(a[i] < a[r]){
             lt[lt_n++] = a[i];
@@ -118,13 +121,15 @@ int partition(int *a, int p, int r)
 void quick_sort(int *a, int p, int r)
 {
     int div;
-
     if(p < r){
         div = partition(a, p, r);
-        #pragma omp task shared(a) if(r - p > TASK_SIZE)
-        quick_sort(a, p, div - 1);
-        #pragma omp task shared(a) if(r - p > TASK_SIZE)
-        quick_sort(a, div + 1, r);
+        #pragma omp sections nowait
+        {
+                #pragma omp section
+                quick_sort(a, p, div - 1);
+                #pragma omp section
+                quick_sort(a, div + 1, r);
+        }
     }
 }
 
@@ -155,9 +160,8 @@ int main(void) {
   int run;
 
   // Configuração do OpenMP
-  int numThreads = 2;
   omp_set_dynamic(0);
-  omp_set_num_threads(numThreads);
+  omp_set_num_threads(NUM_THREADS);
 
   fprintf (stdout, "\nSetting up PAPI...");
   // Initialize PAPI
