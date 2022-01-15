@@ -25,33 +25,33 @@ void print(int arr[]);
 void printBuckets(int Bucket[], int nelm);
 int getBucketIndex(int value);
 
-// Sorting function
+// Bucket Sort
 void BucketSort(int arr[]) {
   int i, j;
 
-  // Create buckets and allocate memory size
+  // Criação dos Buckets
   int buckets [NBUCKET][SIZE] ;
   int bucketelm [NBUCKET];
 
-  // Initialize empty buckets
+  // Inicialização dos Buckets
   for (i = 0; i < NBUCKET; ++i) {
     bucketelm[i] = 0;
   }
 
-  // Fill the buckets with respective elements
+  // Distribuir os valores pelos buckets
   for (i = 0; i < NARRAY; ++i) {
     int pos = getBucketIndex(arr[i]);
     buckets[pos][bucketelm[pos]++] = arr[i];
   }
 
-  // Print the buckets along with their elements
+  // Print dos buckets e dos seus elementos
   /*for (i = 0; i < NBUCKET; i++) {
     printf("Bucket[%d]: ", i);
     printBuckets(buckets[i],bucketelm[i]);
     printf("\n");
   }*/
 
-  // Sort the elements of each bucket
+  // Ordenar os elementos em cada bucket
   for (i = 0; i < NBUCKET; ++i) {
     quick_sort(buckets[i], 0, bucketelm[i]-1);
   }
@@ -64,7 +64,7 @@ void BucketSort(int arr[]) {
     printf("\n");
   }*/
 
-  // Put sorted elements on arr
+  // Colocar os elementos de volta no array
     for (j = 0, i = 0; i < NBUCKET; ++i) {
         int nelm = bucketelm[i];
         int k = 0;
