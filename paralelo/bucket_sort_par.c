@@ -18,7 +18,7 @@ long long values[NUM_EVENTS], min_values[NUM_EVENTS];
 int retval, EventSet=PAPI_NULL;
 
 // number of times the function is executed and measured
-#define NUM_RUNS 1
+#define NUM_RUNS 5
 
 void BucketSort(int arr[]);
 void quick_sort(int *a, int p, int r);
@@ -223,10 +223,10 @@ int main(void) {
         //printf("-------------\n");
 
         BucketSort(array);
-        printf("-------------\n");
-        printf("Sorted array: ");
-        print(array);
-        printf("\n-------------\n");
+        //printf("-------------\n");
+        //printf("Sorted array: ");
+        //print(array);
+        //printf("\n-------------\n");
 
         /* Stop counting events */
         if (PAPI_stop(EventSet,values) != PAPI_OK) {
@@ -257,6 +257,5 @@ int main(void) {
             fprintf (stdout, "PAPI UNKNOWN EVENT = %lld\n", min_values[i]);
         }
   }
-  printf("ntreads: %d",omp_get_num_threads());
   return 0;
 }
