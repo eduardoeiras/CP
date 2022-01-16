@@ -4,11 +4,10 @@
 
 #include "papi.h"
 
-#define NARRAY 2048   // Array size
-#define NBUCKET 64  // Number of buckets
-#define INTERVAL 64  // Each bucket capacity
-#define SIZE 64  // Each bucket size
-
+#define NARRAY 256   // Array size
+#define NBUCKET 32  // Number of buckets
+#define INTERVAL 16  // Each bucket capacity
+#define SIZE 16  // Each bucket size
 #define NUM_THREADS 12
 
 // PAPI events to monitor
@@ -19,7 +18,7 @@ long long values[NUM_EVENTS], min_values[NUM_EVENTS];
 int retval, EventSet=PAPI_NULL;
 
 // number of times the function is executed and measured
-#define NUM_RUNS 5
+#define NUM_RUNS 1
 
 void BucketSort(int arr[]);
 void quick_sort(int *a, int p, int r);
@@ -37,13 +36,12 @@ void BucketSort(int arr[]) {
   int bucketelm [NBUCKET];
 
   // Initialize empty buckets
-  #pragma omp parallel for
+  //#pragma omp parallel for
   for (i = 0; i < NBUCKET; ++i) {
     bucketelm[i] = 0;
   }
 
   // Fill the buckets with respective elements
-  #pragma omp parallel for
   for (i = 0; i < NARRAY; ++i) {
     int pos = getBucketIndex(arr[i]);
     buckets[pos][bucketelm[pos]++] = arr[i];
@@ -57,12 +55,9 @@ void BucketSort(int arr[]) {
   }*/
 
   // Sort the elements of each bucket
+  #pragma omp parallel for
   for (i = 0; i < NBUCKET; ++i) {
-    #pragma omp parallel
-    {
-        #pragma omp single
         quick_sort(buckets[i], 0, bucketelm[i]-1);
-    }
   }
 
   /*printf("-------------\n");
@@ -95,7 +90,6 @@ int partition(int *a, int p, int r)
     int lt_n = 0;
     int gt_n = 0;
 
-  #pragma omp parallel for
     for(i = p; i < r; i++){
         if(a[i] < a[r]){
             lt[lt_n++] = a[i];
@@ -123,7 +117,7 @@ void quick_sort(int *a, int p, int r)
     int div;
     if(p < r){
         div = partition(a, p, r);
-        #pragma omp sections nowait
+        #pragma omp parallel sections
         {
                 #pragma omp section
                 quick_sort(a, p, div - 1);
@@ -263,5 +257,6 @@ int main(void) {
             fprintf (stdout, "PAPI UNKNOWN EVENT = %lld\n", min_values[i]);
         }
   }
+  printf("ntreads: %d",omp_get_num_threads());
   return 0;
 }
